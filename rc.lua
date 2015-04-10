@@ -23,7 +23,7 @@ end
 --Предоставление ошибки во время старта
 do
   local in_error = false
-  awesome.connect_signal("debug::error", 
+  awesome.connect_signal("debug::error",
     function (err)
       -- Make sure we don't go into an endless error loop
       if in_error then return end
@@ -32,7 +32,7 @@ do
       naughty.notify({
         preset = naughty.config.presets.critical,
         title = "Oops, an error happened!",
-        text = err 
+        text = err
       })
       in_error = false
     end)
@@ -52,7 +52,6 @@ terminal = "urxvtc"
 editor = os.getenv("EDITOR") or "vim"
 editor_cmd = terminal .. " -e " .. editor
 modkey = "Mod4"
-
 
 --Обои
 if beautiful.wallpaper then
@@ -102,6 +101,7 @@ editors_menu = {
 
 start_menu = awful.menu({
   items = {
+    { "Manual", terminal .. " -e man awesome" },
     { "Internet", internet_menu },
     { "Editors", editors_menu },
     { "Выход", awesome.quit, beautiful.logout_icon},
@@ -110,23 +110,9 @@ start_menu = awful.menu({
   }
 })
 
-myawesomemenu = {
-  { "manual", terminal .. " -e man awesome" },
-  { "edit config", editor_cmd .. " " .. awesome.conffile },
-  { "restart", awesome.restart },
-  { "quit", awesome.quit }
-}
-
-mymainmenu = awful.menu({
-  items = {
-    { "awesome", myawesomemenu, beautiful.awesome_icon },
-    { "open terminal", terminal }
-  }
-})
-
-mylauncher = awful.widget.launcher({
+start_button = awful.widget.launcher({
   image = beautiful.awesome_icon,
-  menu = mymainmenu
+  menu = start_menu
 })
 
 menubar.utils.terminal = terminal
@@ -251,7 +237,7 @@ for s = 1, screen.count() do
 
   -- Widgets that are aligned to the left
   local left_layout = wibox.layout.fixed.horizontal()
-  left_layout:add(mylauncher)
+  left_layout:add(start_button)
   left_layout:add(mytaglist[s])
   left_layout:add(mypromptbox[s])
 
