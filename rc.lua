@@ -11,6 +11,9 @@ local beautiful = require("beautiful")
 local naughty = require("naughty")
 local menubar = require("menubar")
 
+-- Управление звуком
+local APW = require("apw/widget")
+
 -->>Обработка ошибок
 if awesome.startup_errors then
   naughty.notify({
@@ -269,6 +272,7 @@ for s = 1, screen.count() do
   if s == 1 then right_layout:add(wibox.widget.systray()) end
   right_layout:add(batterywidget)
   right_layout:add(keyboard)
+  right_layout:add(APW)
   right_layout:add(mytextclock)
   right_layout:add(mylayoutbox[s])
 
@@ -348,6 +352,11 @@ globalkeys = awful.util.table.join(
     function ()
       awful.util.spawn("xbacklight -inc 10")
     end),
+
+  --Audio control
+  awful.key({ }, "XF86AudioRaiseVolume",  APW.Up),
+  awful.key({ }, "XF86AudioLowerVolume",  APW.Down),
+  awful.key({ }, "XF86AudioMute",         APW.ToggleMute),
 
   -- Prompt
   awful.key({ modkey },            "r",     function () mypromptbox[mouse.screen]:run() end),
