@@ -154,7 +154,7 @@ split_space:set_markup(" ")
 --Батарейка
 batterywidget = wibox.widget.textbox()
 batterywidget:set_text(" | Battery | ")
-batterywidgettimer = timer({ timeout = 5 })
+batterywidgettimer = timer({ timeout = 60 })
 batterywidgettimer:connect_signal("timeout",
   function()
     fh = assert(io.popen("acpi | cut -d, -f 2,3 -", "r"))
@@ -178,6 +178,10 @@ mywibox = {}
 mypromptbox = {}
 mylayoutbox = {}
 mytaglist = {}
+
+top_panel_box = {}
+bottom_panel_box = {}
+
 mytaglist.buttons = awful.util.table.join(
   awful.button({ }, maus.LEFT, awful.tag.viewonly),
   awful.button({ modkey }, maus.LEFT, awful.client.movetotag),
@@ -246,7 +250,13 @@ for s = 1, screen.count() do
   mytasklist[s] = awful.widget.tasklist(s, awful.widget.tasklist.filter.currenttags, mytasklist.buttons)
 
   -- Create the wibox
-  mywibox[s] = awful.wibox({ position = "top", screen = s })
+  mywibox[s] = awful.wibox({ position = "top", height = 18, screen = s })
+
+  -- Создаем основную панель
+  top_panel_box[s] = ({ position = "top", height = 18, screen = s })
+
+  -- Создаем нижнюю панель
+  bottom_panel_box[s] = awful.wibox({ position = "bottom", height = 16, screen = s })
 
   -- Widgets that are aligned to the left
   local left_layout = wibox.layout.fixed.horizontal()
@@ -269,6 +279,7 @@ for s = 1, screen.count() do
   layout:set_right(right_layout)
 
   mywibox[s]:set_widget(layout)
+  --top_panel_box[s]:set_widget(layout)
 end
 --<<
 
@@ -327,6 +338,16 @@ globalkeys = awful.util.table.join(
   awful.key({ modkey, "Shift"   }, "space", function () awful.layout.inc(layouts, -1) end),
 
   awful.key({ modkey, "Control" }, "n", awful.client.restore),
+
+  -- Brightness
+  awful.key({ }, "XF86MonBrightnessDown",
+    function ()
+      awful.util.spawn("xbacklight -dec 10")
+    end),
+  awful.key({ }, "XF86MonBrightnessUp",
+    function ()
+      awful.util.spawn("xbacklight -inc 10")
+    end),
 
   -- Prompt
   awful.key({ modkey },            "r",     function () mypromptbox[mouse.screen]:run() end),
