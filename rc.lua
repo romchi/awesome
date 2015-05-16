@@ -369,7 +369,15 @@ globalkeys = awful.util.table.join(
       awful.util.getdir("cache") .. "/history_eval")
     end),
   -- Menubar
-  awful.key({ modkey }, "p", function() menubar.show() end)
+  --awful.key({ modkey }, "p", function() menubar.show() end)
+  awful.key({ modkey },            "p",
+    function ()
+      awful.util.spawn(
+        "dmenu_run -i -p 'Run command:' -nb '" ..
+        beautiful.bg_normal .. "' -nf '" .. beautiful.fg_normal ..
+        "' -sb '" .. beautiful.bg_focus ..
+        "' -sf '" .. beautiful.fg_focus .. "'")
+    end)
 )
 
 clientkeys = awful.util.table.join(
