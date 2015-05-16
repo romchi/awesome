@@ -361,7 +361,7 @@ globalkeys = awful.util.table.join(
   -- Prompt
   awful.key({ modkey },            "r",     function () mypromptbox[mouse.screen]:run() end),
 
-  awful.key({ modkey }, "x",
+  awful.key({ modkey },            "x",
     function ()
       awful.prompt.run({ prompt = "Run Lua code: " },
       mypromptbox[mouse.screen].widget,
@@ -372,11 +372,7 @@ globalkeys = awful.util.table.join(
   --awful.key({ modkey }, "p", function() menubar.show() end)
   awful.key({ modkey },            "p",
     function ()
-      awful.util.spawn(
-        "dmenu_run -i -p 'Run command:' -nb '" ..
-        beautiful.bg_normal .. "' -nf '" .. beautiful.fg_normal ..
-        "' -sb '" .. beautiful.bg_focus ..
-        "' -sf '" .. beautiful.fg_focus .. "'")
+      awful.util.spawn("dmenu_run -i -p 'Run command:' -nb '" .. beautiful.bg_normal .. "' -nf '" .. beautiful.fg_normal .. "' -sb '" .. beautiful.bg_focus .. "' -sf '" .. beautiful.fg_focus .. "'")
     end)
 )
 
