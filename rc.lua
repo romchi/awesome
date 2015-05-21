@@ -143,7 +143,8 @@ function context_menu(c)
                                        { cli_float,  function() awful.client.floating.toggle(c) end },
                                        { cli_top, function() c.ontop = not c.ontop end },
                                        { "Закрыть", function() c:kill() end },
-                                     }} )
+                                     }
+                           })
      taskmenu:show()
      return taskmenu
 end
