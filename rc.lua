@@ -412,7 +412,22 @@ globalkeys = awful.util.table.join(
   awful.key({ modkey },            "p",
     function ()
       awful.util.spawn("dmenu_run -i -p 'Run command:' -nb '" .. beautiful.bg_normal .. "' -nf '" .. beautiful.fg_normal .. "' -sb '" .. beautiful.bg_focus .. "' -sf '" .. beautiful.fg_focus .. "'")
+    end),
+
+  -- Screenshot
+  awful.key({   },                 "Print",
+    function()
+      awful.util.spawn("scrot '/home/rb/Downloads/%Y-%m-%d-%H-%M-%S.png'")
+    end),
+  awful.key({ "Control" },           "Print",
+    function()
+      awful.util.spawn("sleep 0.5 && scrot -u '/home/rb/Downloads/window_%Y-%m-%d-%H-%M-%S.png'")
+    end),
+  awful.key({ "Shift" },             "Print",
+    function()
+      awful.util.spawn_with_shell("sleep 0.5 && scrot -b -s '/home/rb/Downloads/region_%Y-%m-%d-%H-%M-%S.png'")
     end)
+
 )
 
 clientkeys = awful.util.table.join(
