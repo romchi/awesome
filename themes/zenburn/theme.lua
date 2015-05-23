@@ -8,7 +8,7 @@
 
 -- {{{ Main
 theme = {}
-theme.wallpaper = "/home/rb/.config/awesome/themes/zenburn/zenburn-background.png"
+theme.wallpaper = "/home/rb/.config/awesome/images/background/minimalizm-monitor-kompyuter.jpg"
 -- }}}
 
 -- {{{ Styles

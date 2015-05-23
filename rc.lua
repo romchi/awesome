@@ -44,8 +44,8 @@ end
 
 -->>Переменные окружения
 --Тема, цвета, шрифты и обои
---beautiful.init("/home/rb/.config/awesome/themes/zenburn/theme.lua")
-beautiful.init("/usr/share/awesome/themes/default/theme.lua")
+beautiful.init("/home/rb/.config/awesome/themes/zenburn/theme.lua")
+--beautiful.init("/usr/share/awesome/themes/default/theme.lua")
 
 --Локаль
 os.setlocale("ru_RU.utf8")
