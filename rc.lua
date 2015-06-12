@@ -14,6 +14,34 @@ local menubar = require("menubar")
 -- Управление звуком
 local APW = require("apw/widget")
 
+--Подсказки к программам
+require ("help/help")
+local help_nofify = nil
+function notifyHide(mynotification)    --функция удаляет уведомление по переданному идентификатору
+  if mynotification ~= nil then
+    naughty.destroy(mynotification)
+    return nil
+  else
+    return true
+  end
+end
+
+function getClientName(c)
+	local cname=nil
+	if (isTerminal(c.class)) then
+		local temp =  tostring(awful.util.pread("pstree " ..tostring(c.pid).. " | awk -F \"---\" \'{ if(NF>3) {print $3} else {print $NF}}\'| sed -e \'$!d\' | awk -F \"-\" \'{if (NF>1) {print $2} else {print$1}}\'"))
+		local cend = string.find(temp,"\n", 1, true)
+		cname = string.sub (temp, 1, cend-1)		
+	elseif (tostring(c.class)=="X-terminal-emulator") then
+		naughty.notify({text = tostring(c.name) })
+		cname=string.gsub(c.name, "~ : ", "")
+	else
+		cname = tostring(c.class)
+	end
+	--nf=displayHelp(cname)
+	return displayHelp(cname)
+end
+
 -->>Обработка ошибок
 if awesome.startup_errors then
   naughty.notify({
@@ -436,6 +464,24 @@ globalkeys = awful.util.table.join(
 
   --quake
   awful.key({ modkey }, "`", function () quakeconsole[mouse.screen]:toggle() end),
+
+  -- help menu
+  awful.key({ modkey,}, "z",
+    function (c)
+      if notifyHide(help_notify) then
+        help_notify = help.getClientName(c)
+      else
+        help_notify = nil
+      end
+    end) ,
+  awful.key({ modkey, "Shift"}, "z",
+    function ()
+      if notifyHide(help_notify) then
+        help_notify = help.displayHelp("Awesome")
+      else
+        help_notify = nil
+      end
+    end),
 
   -- Screenshot
   awful.key({   },                 "Print",
