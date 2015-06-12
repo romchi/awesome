@@ -8,39 +8,11 @@ local wibox = require("wibox")
 --Настройки тем
 local beautiful = require("beautiful")
 --Библиотеки для оповещения
-local naughty = require("naughty")
+naughty = require("naughty")
 local menubar = require("menubar")
 
 -- Управление звуком
 local APW = require("apw/widget")
-
---Подсказки к программам
-require ("help/help")
-local help_nofify = nil
-function notifyHide(mynotification)    --функция удаляет уведомление по переданному идентификатору
-  if mynotification ~= nil then
-    naughty.destroy(mynotification)
-    return nil
-  else
-    return true
-  end
-end
-
-function getClientName(c)
-	local cname=nil
-	if (isTerminal(c.class)) then
-		local temp =  tostring(awful.util.pread("pstree " ..tostring(c.pid).. " | awk -F \"---\" \'{ if(NF>3) {print $3} else {print $NF}}\'| sed -e \'$!d\' | awk -F \"-\" \'{if (NF>1) {print $2} else {print$1}}\'"))
-		local cend = string.find(temp,"\n", 1, true)
-		cname = string.sub (temp, 1, cend-1)		
-	elseif (tostring(c.class)=="X-terminal-emulator") then
-		naughty.notify({text = tostring(c.name) })
-		cname=string.gsub(c.name, "~ : ", "")
-	else
-		cname = tostring(c.class)
-	end
-	--nf=displayHelp(cname)
-	return displayHelp(cname)
-end
 
 -->>Обработка ошибок
 if awesome.startup_errors then
@@ -240,6 +212,26 @@ worktime_widget = wibox.widget.textbox()
 worktime_widget:set_text("- Uptime -")
 worktime_widget = timer({ timeout = 60 })
 
+-- help
+require ("help/help")
+local help_nofify = nil
+function notifyHide(mynotification)    --функция удаляет уведомление по переданному идентификатору
+  if mynotification ~= nil then
+    naughty.destroy(mynotification)
+    return nil
+  else
+    return true
+  end
+end
+
+-- translate
+function clip_translate()
+  local clip = nil
+  clip = awful.util.pread("xclip -o")
+  if clip then
+    awful.util.spawn("/home/rb/bin/google_translate.sh \"" .. clip .."\"",false)
+  end
+end
 
 -- quake
 local quake = require("quake")
@@ -482,6 +474,9 @@ globalkeys = awful.util.table.join(
         help_notify = nil
       end
     end),
+
+  -- translate
+  awful.key ({modkey, "Control" }, "t", function () clip_translate() end),
 
   -- Screenshot
   awful.key({   },                 "Print",
