@@ -55,6 +55,9 @@ terminal = "urxvtc"
 editor = os.getenv("EDITOR") or "vim"
 editor_cmd = terminal .. " -e " .. editor
 modkey = "Mod4"
+config = {
+  terminal = "urxvt"
+}
 
 --Обои
 if beautiful.wallpaper then
@@ -204,6 +207,16 @@ batterywidgettimer:connect_signal("timeout",
 )
 batterywidgettimer:start()
 
+--Время работы
+worktime_widget = wibox.widget.textbox()
+worktime_widget:set_text("- Uptime -")
+worktime_widget = timer({ timeout = 60 })
+
+
+-- quake
+local quake = require("quake")
+local quakeconsole = {}
+
 -->>Настройка панелей
 --Именование клавиш миши
 local maus = {
@@ -299,6 +312,9 @@ for s = 1, screen.count() do
 
   -- Создаем нижнюю панель
   bottom_panel_box[s] = awful.wibox({ position = "bottom", height = 16, screen = s })
+
+  --quake
+  quakeconsole[s] = quake({ terminal = config.terminal, height = 0.3, screen = s })
 
   -- Widgets that are aligned to the left
   local left_layout = wibox.layout.fixed.horizontal()
@@ -417,6 +433,9 @@ globalkeys = awful.util.table.join(
     function ()
       awful.util.spawn("dmenu_run -i -p 'Run command:' -nb '" .. beautiful.bg_normal .. "' -nf '" .. beautiful.fg_normal .. "' -sb '" .. beautiful.bg_focus .. "' -sf '" .. beautiful.fg_focus .. "'")
     end),
+
+  --quake
+  awful.key({ modkey }, "`", function () quakeconsole[mouse.screen]:toggle() end),
 
   -- Screenshot
   awful.key({   },                 "Print",
