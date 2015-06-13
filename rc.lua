@@ -84,8 +84,10 @@ do
     tags[s] = awful.tag(
       { "[ Web ]", "[ MH ]", "[ Term ]", "[ Chat ]", "[ Mail ]", "[ Files ]", "[ Help ]" },
       s,
-      {  max     , tile    , fair      , fair      , max       , tile       , float      }
+      {  max     , tile    , fair      , tile      , max       , tile       , float      }
     )
+    awful.tag.setncol(2, tags[s][4])
+    awful.tag.setproperty(tags[s][4], "mwfact", 0.20)
   end
 end
 --<<
@@ -436,6 +438,13 @@ globalkeys = awful.util.table.join(
   -- Prompt
   --awful.key({ modkey },            "r",     function () mypromptbox[mouse.screen]:run() end),
   awful.key({ modkey },            "r",     function () awful.util.spawn("rofi -show run -font 'snap 10' -fg '#505050' -bg '#000000' -hlfg '#ffb964' -hlbg '#000000' -o 85")  end),
+  awful.key({ modkey, "Shift"   }, "r",
+    function ()
+      awful.prompt.run({ prompt = "Запуск в терминале: " },
+      mypromptbox[mouse.screen].widget, function (...) awful.util.spawn(config.terminal .. " -e " .. ...) end,
+      awful.completion.shell,
+      awful.util.getdir("cache") .. "/history")
+    end),
 
   -- Screen lock
   awful.key({ modkey, "Control" }, "l", function () awful.util.spawn("xscreensaver-command -lock") end),
@@ -602,7 +611,14 @@ awful.rules.rules = {
 
   { rule = { class = "Claws-mail"},
     properties = {
-      tag = tags[1][5] } }
+      tag = tags[1][5] } },
+  { rule = { class = "Pidgin", role = "buddy_list"},
+     properties = {
+       tag = tags[1][4] } },
+   { rule = { class = "Pidgin", role = "conversation"},
+     properties = {
+       tag = tags[1][4]},
+     callback = awful.client.setslave }
 }
 --<<
 
