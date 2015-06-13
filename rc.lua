@@ -55,6 +55,9 @@ terminal = "urxvtc"
 editor = os.getenv("EDITOR") or "vim"
 editor_cmd = terminal .. " -e " .. editor
 modkey = "Mod4"
+--config_dir = ("/home/rb/.config/awesome/")
+--themes_dir = (config_dir .. "/themes")
+--beautiful.init(themes_dir .. "/powerarrow/theme.lua")
 config = {
   terminal = "urxvt"
 }
@@ -209,11 +212,6 @@ batterywidgettimer:connect_signal("timeout",
 )
 batterywidgettimer:start()
 
---Время работы
-worktime_widget = wibox.widget.textbox()
-worktime_widget:set_text("- Uptime -")
-worktime_widget = timer({ timeout = 60 })
-
 -- help
 require ("help/help")
 local help_nofify = nil
@@ -327,10 +325,10 @@ for s = 1, screen.count() do
   mytasklist[s] = awful.widget.tasklist(s, awful.widget.tasklist.filter.currenttags, mytasklist.buttons)
 
   -- Create the wibox
-  mywibox[s] = awful.wibox({ position = "top", height = 18, screen = s })
+  mywibox[s] = awful.wibox({ position = "top", height = 16, screen = s })
 
   -- Создаем основную панель
-  top_panel_box[s] = ({ position = "top", height = 18, screen = s })
+  top_panel_box[s] = ({ position = "top", height = 16, screen = s })
 
   -- Создаем нижнюю панель
   bottom_panel_box[s] = awful.wibox({ position = "bottom", height = 16, screen = s })
@@ -466,24 +464,6 @@ globalkeys = awful.util.table.join(
   --quake
   awful.key({ modkey }, "`", function () quakeconsole[mouse.screen]:toggle() end),
 
-  -- help menu
-  awful.key({ modkey,}, "z",
-    function (c)
-      if notifyHide(help_notify) then
-        help_notify = help.getClientName(c)
-      else
-        help_notify = nil
-      end
-    end) ,
-  awful.key({ modkey, "Shift"}, "z",
-    function ()
-      if notifyHide(help_notify) then
-        help_notify = help.displayHelp("Awesome")
-      else
-        help_notify = nil
-      end
-    end),
-
   -- translate
   awful.key ({modkey, "Control" }, "t", function () clip_translate() end),
 
@@ -520,6 +500,23 @@ clientkeys = awful.util.table.join(
     function (c)
       c.maximized_horizontal = not c.maximized_horizontal
       c.maximized_vertical   = not c.maximized_vertical
+    end),
+      -- help menu
+  awful.key({ modkey,}, "z",
+    function (c)
+      if notifyHide(help_notify) then
+        help_notify = help.getClientName(c)
+      else
+        help_notify = nil
+      end
+    end) ,
+  awful.key({ modkey, "Shift"}, "z",
+    function ()
+      if notifyHide(help_notify) then
+        help_notify = help.displayHelp("Awesome")
+      else
+        help_notify = nil
+      end
     end)
 )
 
