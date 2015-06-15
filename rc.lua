@@ -44,7 +44,8 @@ end
 
 -->>Переменные окружения
 --Тема, цвета, шрифты и обои
-beautiful.init("/home/rb/.config/awesome/themes/zenburn/theme.lua")
+--beautiful.init("/home/rb/.config/awesome/themes/zenburn/theme.lua")
+beautiful.init(awful.util.getdir("config") .. "/themes/current_theme/theme.lua")
 --beautiful.init("/usr/share/awesome/themes/default/theme.lua")
 
 --Локаль
@@ -110,12 +111,37 @@ editors_menu = {
   { "GVim", "gvim" },
 }
 
+mythememenu = {}
+function theme_load(theme)
+   local cfg_path = awful.util.getdir("config")
+   -- Создание символической ссылки на выбраную тему в /home/user/.config/awesome/current_theme
+   awful.util.spawn("ln -sfn " .. cfg_path .. "/themes/" .. theme .. " " .. cfg_path .. "/themes/current_theme")
+   awesome.restart()
+end
+
+function theme_menu()
+   -- Прочитать все файлы тем и добавить их в таблицу меню
+   local cmd = "ls -1 " .. awful.util.getdir("config") .. "/themes/"
+   local f = io.popen(cmd)
+
+   for l in f:lines() do
+    local item = { l, function () theme_load(l) end }
+    table.insert(mythememenu, item)
+   end
+
+   f:close()
+end
+-- Создаем таблицу меню при запуске или перезапуске
+theme_menu()
+
+
 start_menu = awful.menu({
   items = {
     { "Manual", terminal .. " -e man awesome" },
     { "Internet", internet_menu },
     { "Editors", editors_menu },
     { "Выход", awesome.quit, beautiful.logout_icon},
+    { "themes", mythememenu },
     { "Перезагрузка", function()  awful.util.spawn_with_shell("systemctl reboot") end, beautiful.reboot_icon},
     { "Выключение", function()  awful.util.spawn_with_shell("systemctl poweroff") end, beautiful.poweroff_icon}
   }
