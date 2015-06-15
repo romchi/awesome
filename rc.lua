@@ -386,7 +386,6 @@ globalkeys = awful.util.table.join(
       awful.client.focus.byidx(-1)
       if client.focus then client.focus:raise() end
     end),
-  awful.key({ modkey,           }, "w", function () mymainmenu:show() end),
 
   -- Layout manipulation
   awful.key({ modkey, "Shift"   }, "j", function () awful.client.swap.byidx(  1)    end),
@@ -421,11 +420,11 @@ globalkeys = awful.util.table.join(
   -- Brightness
   awful.key({ }, "XF86MonBrightnessDown",
     function ()
-      awful.util.spawn("xbacklight -dec 10")
+      awful.util.spawn("xbacklight -dec 5")
     end),
   awful.key({ }, "XF86MonBrightnessUp",
     function ()
-      awful.util.spawn("xbacklight -inc 10")
+      awful.util.spawn("xbacklight -inc 5")
     end),
 
   --Audio control
@@ -436,6 +435,8 @@ globalkeys = awful.util.table.join(
   -- Prompt
   --awful.key({ modkey },            "r",     function () mypromptbox[mouse.screen]:run() end),
   awful.key({ modkey },            "r",     function () awful.util.spawn("rofi -show run -font 'snap 10' -fg '#505050' -bg '#000000' -hlfg '#ffb964' -hlbg '#000000' -o 85")  end),
+  awful.key({ modkey,           }, "w", function () awful.util.spawn("rofi -show window -font 'snap 10' -fg '#505050' -bg '#000000' -hlfg '#ffb964' -hlbg '#000000' -o 85") end),
+  awful.key({ modkey,           }, "s", function () awful.util.spawn("rofi -show ssh -font 'snap 10' -fg '#505050' -bg '#000000' -hlfg '#ffb964' -hlbg '#000000' -o 85") end),
   awful.key({ modkey, "Shift"   }, "r",
     function ()
       awful.prompt.run({ prompt = "Запуск в терминале: " },
