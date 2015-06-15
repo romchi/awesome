@@ -448,6 +448,16 @@ globalkeys = awful.util.table.join(
   -- Screen lock
   awful.key({ modkey, "Control" }, "l", function () awful.util.spawn("xscreensaver-command -lock") end),
 
+  awful.key({ modkey }, "g",
+    function ()
+      awful.prompt.run({ prompt = "Web search: " }, mypromptbox[mouse.screen].widget,
+        function (command)
+          awful.util.spawn("google-chrome-stable 'http://yubnub.org/parser/parse?command="..command.."'", false)
+          -- Switch to the web tag, where Firefox is, in this case tag 3
+          if tags[mouse.screen] then awful.tag.viewonly(tags[mouse.screen][1]) end
+        end)
+      end),
+
   awful.key({ modkey },            "x",
     function ()
       awful.prompt.run({ prompt = "Run Lua code: " },
