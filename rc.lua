@@ -458,6 +458,16 @@ globalkeys = awful.util.table.join(
         end)
       end),
 
+  awful.key({ modkey            }, "b",
+    function ()
+      awful.prompt.run({ prompt = "Calculate: " }, mypromptbox[mouse.screen].widget,
+        function (expr)
+          local result = awful.util.eval("return (" .. expr .. ")")
+          naughty.notify({ text = expr .. " = " .. result, timeout = 10 })
+        end
+      )
+    end),
+
   awful.key({ modkey },            "x",
     function ()
       awful.prompt.run({ prompt = "Run Lua code: " },
