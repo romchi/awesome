@@ -14,6 +14,9 @@ local menubar = require("menubar")
 -- Управление звуком
 local APW = require("apw/widget")
 
+-- Тестирование Lain
+local lain = require("lain")
+
 -->>Обработка ошибок
 if awesome.startup_errors then
   naughty.notify({
@@ -78,6 +81,15 @@ local layouts = {
   awful.layout.suit.tile.bottom,  -- 3
   awful.layout.suit.fair,         -- 4
   awful.layout.suit.max,          -- 5
+
+  lain.layout.termfair,           -- Делит на 3 ровные части
+  lain.layout.uselesstile,
+  lain.layout.centerfair,         -- По центру выравнивание до 3
+  lain.layout.cascade,
+  lain.layout.cascadetile,
+  lain.layout.centerwork,         -- Полный центр и рядом
+  lain.layout.uselessfair,
+  lain.layout.uselesspiral
 }
 
 tags = {}
@@ -484,15 +496,15 @@ globalkeys = awful.util.table.join(
         end)
       end),
 
-  awful.key({ modkey            }, "b",
-    function ()
-      awful.prompt.run({ prompt = "Calculate: " }, mypromptbox[mouse.screen].widget,
-        function (expr)
-          local result = awful.util.eval("return (" .. expr .. ")")
-          naughty.notify({ text = expr .. " = " .. result, timeout = 10 })
-        end
-      )
-    end),
+  --awful.key({ modkey            }, "b",
+  --  function ()
+  --    awful.prompt.run({ prompt = "Calculate: " }, mypromptbox[mouse.screen].widget,
+  --      function (expr)
+  --        local result = awful.util.eval("return (" .. expr .. ")")
+  --        naughty.notify({ text = expr .. " = " .. result, timeout = 10 })
+  --      end
+  --    )
+  --  end),
 
   awful.key({ modkey },            "x",
     function ()
@@ -537,6 +549,7 @@ clientkeys = awful.util.table.join(
   awful.key({ modkey, "Control" }, "Return", function (c) c:swap(awful.client.getmaster()) end),
   awful.key({ modkey,           }, "o",      awful.client.movetoscreen                        ),
   awful.key({ modkey,           }, "t",      function (c) c.ontop = not c.ontop            end),
+  awful.key({ modkey, "Control" }, "v", lain.util.magnify_client),
   awful.key({ modkey,           }, "n",
     function (c)
       -- The client currently has the input focus, so it cannot be
@@ -689,7 +702,7 @@ client.connect_signal("manage", function (c, startup)
     end
   end
 
-  local titlebars_enabled = false
+  local titlebars_enabled = true
   if titlebars_enabled and (c.type == "normal" or c.type == "dialog") then
     -- buttons for the titlebar
     local buttons = awful.util.table.join(
