@@ -102,6 +102,11 @@ do
       s,
       {  max     , tile    , fair      , tile      , max       , tile       , float      }
     )
+    --tags[s] = awful.tag({ "♨", "⌨", "⚡", "✉", "☕", "❁", "☃", "☄", "⚢" }, s, layouts[1])
+    --tags[s] = awful.tag({ "➊", "➋", "➌", "➍", "➎", "➏", "➐", "➑", "➒"  }, s, layouts[1])
+    --tags[s] = awful.tag({ "☭", "⌥", "✇", "⌤", "☼", "⌘","⍜", "✣","☕"  }, s, layouts[1])
+    --tags[s] = awful.tag({ "  α  ", "  β  ", "  ζ  ", "  Θ  ", "  Ξ  ", "  ς  ", "  ψ  "  }, s, layouts[1])
+    --tags[s] = awful.tag({ "⠐", "⠡", "⠪", "⠵", "⠻", "⠿" }, s, layouts[1])
     awful.tag.setncol(2, tags[s][4])
     awful.tag.setproperty(tags[s][4], "mwfact", 0.20)
   end
@@ -550,6 +555,19 @@ clientkeys = awful.util.table.join(
   awful.key({ modkey,           }, "o",      awful.client.movetoscreen                        ),
   awful.key({ modkey,           }, "t",      function (c) c.ontop = not c.ontop            end),
   awful.key({ modkey, "Control" }, "v", lain.util.magnify_client),
+  awful.key({ modkey, "Shift" }, "t",
+    function (c)
+      if   c.titlebar then awful.titlebar.remove(c)
+      else awful.titlebar:add(c, { modkey = modkey }) end
+    end),
+  awful.key({ modkey, "Control" }, "i",
+    function (c)
+      naughty.notify({ text =
+        "Class: " .. c.class ..
+        "\nInstance: " .. c.instance ..
+        "\nName: " .. c.name .. "\n",
+      width = 400 })
+    end),
   awful.key({ modkey,           }, "n",
     function (c)
       -- The client currently has the input focus, so it cannot be
@@ -702,7 +720,7 @@ client.connect_signal("manage", function (c, startup)
     end
   end
 
-  local titlebars_enabled = true
+  local titlebars_enabled = false
   if titlebars_enabled and (c.type == "normal" or c.type == "dialog") then
     -- buttons for the titlebar
     local buttons = awful.util.table.join(
