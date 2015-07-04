@@ -231,6 +231,34 @@ dbus.connect_signal("ru.gentoo.kbdd",
   end
 )
 
+----виджет клавиатуры
+--kbdwidget = widget({type = "textbox", name = "kbdwidget"})
+--kbdwidget.border_color = beautiful.fg_normal
+--kbdwidget.border_width = 1
+--kbdwidget.text = '<span color="#F8EC5D"><b> Eng </b></span>'
+--next_layout=1
+--function changeKeyboardLayout(keyboard_layout)
+--    awful.util.spawn( "dbus-send --type=method_call --session --dest=ru.gentoo.KbddService /ru/gentoo/KbddService ru.gentoo.kbdd.set_layout uint32:".. keyboard_layout )
+--end
+--dbus.request_name("session", "ru.gentoo.kbdd") 
+--dbus.add_match("session", "interface='ru.gentoo.kbdd',member='layoutChanged'") 
+--dbus.add_signal("ru.gentoo.kbdd", function(...) 
+--        local data = {...} 
+--        local layout = data[2] 
+--        lts = {[0] = '<span color="#F8EC5D"><b> Eng </b></span>', [1] = '<span color="#FF3000"><b> Рус </b></span>'} 
+--         kbdwidget.text = " "..lts[layout].." " 
+--         if layout == 1
+--             then next_layout = 0
+--         else
+--             next_layout = 1
+--        end 
+--    end
+--                ) 
+--kbdwidget:buttons(awful.util.table.join(awful.button({}, 1, function ()
+--                changeKeyboardLayout(next_layout)
+--        end)))
+
+
 --Часы и календарь
 mytextclock = awful.widget.textclock("%a %d %b, %H:%M")
 
@@ -245,15 +273,45 @@ split_space:set_markup(" ")
 --Батарейка
 batterywidget = wibox.widget.textbox()
 batterywidget:set_text(" | Battery | ")
-batterywidgettimer = timer({ timeout = 60 })
+batterywidgettimer = timer({ timeout = 10 })
+function string.starts(String,Start)
+   return string.sub(String,1,string.len(Start))==Start
+end
 batterywidgettimer:connect_signal("timeout",
   function()
-    fh = assert(io.popen("acpi | cut -d, -f 2,3 -", "r"))
-    batterywidget:set_text(" |" .. fh:read("*l") .. " | ")
+    fh = assert(io.popen("acpi | cut -d, -f 2 -", "r"))
+    str = fh:read("*l")
+    if string.sub(str, 2, 2) == "1" then
+      batterywidget:set_text(" | " .. str .. " | ")
+      naughty.notify({title = "⚡ Beware! ⚡",
+                            text = "Battery charge is low ( ⚡ "..str.." )!",
+                            timeout = 7,
+                            position = "top_right",
+                            fg = beautiful.fg_focus,
+                            bg = beautiful.bg_focus
+                     })
+    else
+      batterywidget:set_text(" | ⚡ " .. str .. " | ")
+    end
     fh:close()
   end
 )
 batterywidgettimer:start()
+
+-- Диск
+fs_root = wibox.widget.textbox()
+fs_root:set_text("Занято:")
+fs_timer = timer ({timeout = 600}) --раз в 10 минут
+fs_timer:connect_signal ("timeout", function () awful.util.spawn_with_shell("dbus-send --session --dest=org.naquadah.awesome.awful /ru/console/df ru.console.df.fsValue string:$(df -h --output='pcent' /home | sed '1d;s/ //g' )" ) end )
+fs_timer:start()
+dbus.request_name("session", "ru.console.df")
+dbus.add_match("session", "interface='ru.console.df', member='fsValue' " )
+dbus.connect_signal("ru.console.df",
+  function (...)
+    local data = {...}
+    local dbustext = data[2]
+    fs_root:set_text("Занято:" .. dbustext)
+  end )
 
 -- help
 require ("help/help")
@@ -388,6 +446,7 @@ for s = 1, screen.count() do
   -- Widgets that are aligned to the right
   local right_layout = wibox.layout.fixed.horizontal()
   if s == 1 then right_layout:add(wibox.widget.systray()) end
+  right_layout:add(fs_root)
   right_layout:add(batterywidget)
   right_layout:add(keyboard)
   right_layout:add(APW)
