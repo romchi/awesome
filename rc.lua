@@ -273,7 +273,7 @@ split_space:set_markup(" ")
 --Батарейка
 batterywidget = wibox.widget.textbox()
 batterywidget:set_text(" | Battery | ")
-batterywidgettimer = timer({ timeout = 10 })
+batterywidgettimer = timer({ timeout = 60 })
 function string.starts(String,Start)
    return string.sub(String,1,string.len(Start))==Start
 end
@@ -281,17 +281,26 @@ batterywidgettimer:connect_signal("timeout",
   function()
     fh = assert(io.popen("acpi | cut -d, -f 2 -", "r"))
     str = fh:read("*l")
-    if string.sub(str, 2, 2) == "1" then
-      batterywidget:set_text(" | " .. str .. " | ")
-      naughty.notify({title = "⚡ Beware! ⚡",
-                            text = "Battery charge is low ( ⚡ "..str.." )!",
-                            timeout = 7,
-                            position = "top_right",
-                            fg = beautiful.fg_focus,
-                            bg = beautiful.bg_focus
+    batterywidget:set_text(" | ⚡ " .. str .. " | ")
+
+    if string.len(str) == 4 then
+      if string.sub(str, 2, 2) == "1" then
+        naughty.notify({title = "⚡ Beware! ⚡",
+                        text = "Battery charge is low ( ⚡ "..str.." )!",
+                        timeout = 7,
+                        position = "top_right",
+                        fg = beautiful.fg_focus,
+                        bg = beautiful.bg_focus
                      })
-    else
-      batterywidget:set_text(" | ⚡ " .. str .. " | ")
+      end
+    elseif string.len(str) == 3 then
+      naughty.notify({title = "⚡ Beware! ⚡",
+                        text = "Battery charge is low ( ⚡ "..str.." )!",
+                        timeout = 7,
+                        position = "top_right",
+                        fg = beautiful.fg_focus,
+                        bg = beautiful.bg_focus
+                     })
     end
     fh:close()
   end
