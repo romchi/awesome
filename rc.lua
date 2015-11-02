@@ -283,20 +283,10 @@ batterywidgettimer:connect_signal("timeout",
     str = fh:read("*l")
     batterywidget:set_text(" | ⚡ " .. str .. " | ")
 
-    if string.len(str) == 4 then
-      if string.sub(str, 2, 2) == "1" then
-        naughty.notify({title = "⚡ Beware! ⚡",
-                        text = "Battery charge is low ( ⚡ "..str.." )!",
-                        timeout = 7,
-                        position = "top_right",
-                        fg = beautiful.fg_focus,
-                        bg = beautiful.bg_focus
-                     })
-      end
-    elseif string.len(str) == 3 then
+    if string.len(str) == 3 then
       naughty.notify({title = "⚡ Beware! ⚡",
                         text = "Battery charge is low ( ⚡ "..str.." )!",
-                        timeout = 7,
+                        timeout = 10,
                         position = "top_right",
                         fg = beautiful.fg_focus,
                         bg = beautiful.bg_focus
@@ -545,9 +535,9 @@ globalkeys = awful.util.table.join(
 
   -- Prompt
   --awful.key({ modkey },            "r",     function () mypromptbox[mouse.screen]:run() end),
-  awful.key({ modkey },            "r",     function () awful.util.spawn("rofi -show run -font 'snap 10' -fg '#505050' -bg '#000000' -hlfg '#ffb964' -hlbg '#000000' -o 85")  end),
-  awful.key({ modkey,           }, "w", function () awful.util.spawn("rofi -show window -font 'snap 10' -fg '#505050' -bg '#000000' -hlfg '#ffb964' -hlbg '#000000' -o 85") end),
-  awful.key({ modkey,           }, "s", function () awful.util.spawn("rofi -show ssh -font 'snap 10' -fg '#505050' -bg '#000000' -hlfg '#ffb964' -hlbg '#000000' -o 85") end),
+  awful.key({ modkey },            "r",     function () awful.util.spawn("rofi -show run")  end),
+  awful.key({ modkey,           }, "w", function () awful.util.spawn("rofi -show window") end),
+  awful.key({ modkey,           }, "s", function () awful.util.spawn("rofi -show ssh") end),
   awful.key({ modkey, "Shift"   }, "r",
     function ()
       awful.prompt.run({ prompt = "Запуск в терминале: " },
