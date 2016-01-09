@@ -12,10 +12,12 @@ naughty = require("naughty")
 local menubar = require("menubar")
 
 -- Управление звуком
-local APW = require("apw/widget")
+--local APW = require("apw/widget")
+
+local cal = require("utils.cal")
 
 -- Тестирование Lain
-local lain = require("lain")
+--local lain = require("lain")
 
 -->>Обработка ошибок
 if awesome.startup_errors then
@@ -37,13 +39,12 @@ do
 
       naughty.notify({
         preset = naughty.config.presets.critical,
-        title = "Oops, an error happened!",
+        title = "А трабла то уже случилась!",
         text = err
       })
       in_error = false
     end)
 end
---<<
 
 -->>Переменные окружения
 --Тема, цвета, шрифты и обои
@@ -82,14 +83,14 @@ local layouts = {
   awful.layout.suit.fair,         -- 4
   awful.layout.suit.max,          -- 5
 
-  lain.layout.termfair,           -- Делит на 3 ровные части
-  lain.layout.uselesstile,
-  lain.layout.centerfair,         -- По центру выравнивание до 3
-  lain.layout.cascade,
-  lain.layout.cascadetile,
-  lain.layout.centerwork,         -- Полный центр и рядом
-  lain.layout.uselessfair,
-  lain.layout.uselesspiral
+  --lain.layout.termfair,           -- Делит на 3 ровные части
+  --lain.layout.uselesstile,
+  --lain.layout.centerfair,         -- По центру выравнивание до 3
+  --lain.layout.cascade,
+  --lain.layout.cascadetile,
+  --lain.layout.centerwork,         -- Полный центр и рядом
+  --lain.layout.uselessfair,
+  --lain.layout.uselesspiral
 }
 
 tags = {}
@@ -128,6 +129,13 @@ editors_menu = {
   { "GVim", "gvim" },
 }
 
+system_menu = {
+  { "Выйти", awesome.quit },
+  { "Спящий режим" },
+  { "Перезагрузка", function()  awful.util.spawn_with_shell("systemctl reboot") end, beautiful.reboot_icon},
+  { "Выключение", function()  awful.util.spawn_with_shell("systemctl poweroff") end, beautiful.poweroff_icon}
+}
+
 mythememenu = {}
 function theme_load(theme)
    local cfg_path = awful.util.getdir("config")
@@ -157,10 +165,8 @@ start_menu = awful.menu({
     { "Manual", terminal .. " -e man awesome" },
     { "Internet", internet_menu },
     { "Editors", editors_menu },
-    { "Выход", awesome.quit, beautiful.logout_icon},
     { "themes", mythememenu },
-    { "Перезагрузка", function()  awful.util.spawn_with_shell("systemctl reboot") end, beautiful.reboot_icon},
-    { "Выключение", function()  awful.util.spawn_with_shell("systemctl poweroff") end, beautiful.poweroff_icon}
+    { "Система", system_menu }
   }
 })
 
@@ -231,36 +237,13 @@ dbus.connect_signal("ru.gentoo.kbdd",
   end
 )
 
-----виджет клавиатуры
---kbdwidget = widget({type = "textbox", name = "kbdwidget"})
---kbdwidget.border_color = beautiful.fg_normal
---kbdwidget.border_width = 1
---kbdwidget.text = '<span color="#F8EC5D"><b> Eng </b></span>'
---next_layout=1
---function changeKeyboardLayout(keyboard_layout)
---    awful.util.spawn( "dbus-send --type=method_call --session --dest=ru.gentoo.KbddService /ru/gentoo/KbddService ru.gentoo.kbdd.set_layout uint32:".. keyboard_layout )
---end
---dbus.request_name("session", "ru.gentoo.kbdd") 
---dbus.add_match("session", "interface='ru.gentoo.kbdd',member='layoutChanged'") 
---dbus.add_signal("ru.gentoo.kbdd", function(...) 
---        local data = {...} 
---        local layout = data[2] 
---        lts = {[0] = '<span color="#F8EC5D"><b> Eng </b></span>', [1] = '<span color="#FF3000"><b> Рус </b></span>'} 
---         kbdwidget.text = " "..lts[layout].." " 
---         if layout == 1
---             then next_layout = 0
---         else
---             next_layout = 1
---        end 
---    end
---                ) 
---kbdwidget:buttons(awful.util.table.join(awful.button({}, 1, function ()
---                changeKeyboardLayout(next_layout)
---        end)))
-
-
 --Часы и календарь
-mytextclock = awful.widget.textclock("%a %d %b, %H:%M")
+mytextclock = awful.widget.textclock(" %a %d %b, %H:%M ")
+--calendar2.addCalendarToWidget(mytextclock, "<span color='green'>%s</span>")
+cal.register(mytextclock, "<b><span color='red'>%s</span></b>")
+
+--require('calendar2')
+--calendar2.addCalendarToWidget(mytextclock)
 
 --Разделители
 split_line = wibox.widget.textbox()
@@ -271,37 +254,66 @@ split_space = wibox.widget.textbox()
 split_space:set_markup(" ")
 
 --Батарейка
-batterywidget = wibox.widget.textbox()
-batterywidget:set_text(" | Battery | ")
-batterywidgettimer = timer({ timeout = 60 })
-function string.starts(String,Start)
-   return string.sub(String,1,string.len(Start))==Start
-end
-batterywidgettimer:connect_signal("timeout",
-  function()
-    fh = assert(io.popen("acpi | cut -d, -f 2 -", "r"))
-    str = fh:read("*l")
-    batterywidget:set_text(" | ⚡ " .. str .. " | ")
+battery_widget = wibox.widget.textbox()
 
-    if string.len(str) == 3 then
-      naughty.notify({title = "⚡ Beware! ⚡",
-                        text = "Battery charge is low ( ⚡ "..str.." )!",
-                        timeout = 10,
-                        position = "top_right",
-                        fg = beautiful.fg_focus,
-                        bg = beautiful.bg_focus
-                     })
+function battery_status ()
+  local output={} --output buffer
+  local fd=io.popen("acpi -b", "r") --list present batteries
+  local line=fd:read()
+  while line do --there might be several batteries.
+    local battery_num = string.match(line, "Battery (%d+)")
+    local battery_load = string.match(line, " (%d+)%%")
+    local time_rem = string.match(line, "(%d+:%d+):%d+")
+    local discharging
+    local power
+    if string.match(line, "Discharging")=="Discharging" then --discharging: always red
+      discharging="<span color=\"#CC7777\"> ↓ </span>"
+    else --charging
+      discharging="<span color=\"#CCCC77\"> ↑ </span>"
     end
-    fh:close()
+    if tonumber(battery_load)<100 then --almost charged
+      power="<span color=\"#77CC77\">"
+    elseif tonumber(battery_load)<60 then
+      power="<span color=\"#77CC77\">"
+    elseif tonumber(battery_load)<30 then
+      power="<span color=\"#77CC77\">"
+    elseif tonumber(battery_load)<5 then
+      power="<span color=\"#77CC77\">"
+      naughty.notify({title = "⚡ Beware! ⚡",
+        text = "Battery charge is low ( ⚡ "..battery_load.." )!",
+        timeout = 10,
+        position = "top_right",
+        fg = beautiful.fg_focus,
+        bg = beautiful.bg_focus
+      })
+    end
+
+    if battery_num and battery_load and time_rem then
+      table.insert(output,discharging.."⚡ "..power..battery_load.."% "..time_rem.."</span>")
+    elseif battery_num and battery_load then --remaining time unavailable
+      table.insert(output,discharging.."⚡ "..power..battery_load.."%</span>")
+    end --even more data unavailable: we might be getting an unexpected output format, so let's just skip this line.
+    line=fd:read() --read next line
   end
-)
-batterywidgettimer:start()
+  return table.concat(output,"/") --FIXME: better separation for several batteries. maybe a pipe?
+end
+
+battery_widget:set_markup(" " .. battery_status() .. " ")
+battery_widget_timer = timer({ timeout = 30 })
+battery_widget_timer:connect_signal("timeout", 
+  function()
+    battery_widget:set_markup(" " .. battery_status() .. " ")
+  end)
+battery_widget_timer:start()
 
 -- Диск
 fs_root = wibox.widget.textbox()
-fs_root:set_text("Занято:")
+fs_root:set_text(" Занято: X% ")
 fs_timer = timer ({timeout = 600}) --раз в 10 минут
-fs_timer:connect_signal ("timeout", function () awful.util.spawn_with_shell("dbus-send --session --dest=org.naquadah.awesome.awful /ru/console/df ru.console.df.fsValue string:$(df -h --output='pcent' /home | sed '1d;s/ //g' )" ) end )
+fs_timer:connect_signal ("timeout", 
+  function () 
+    awful.util.spawn_with_shell("dbus-send --session --dest=org.naquadah.awesome.awful /ru/console/df ru.console.df.fsValue string:$(df -h --output='pcent' /home | sed '1d;s/ //g' )" ) 
+  end)
 fs_timer:start()
 dbus.request_name("session", "ru.console.df")
 dbus.add_match("session", "interface='ru.console.df', member='fsValue' " )
@@ -309,22 +321,10 @@ dbus.connect_signal("ru.console.df",
   function (...)
     local data = {...}
     local dbustext = data[2]
-    fs_root:set_text("Занято:" .. dbustext)
+    fs_root:set_text(" Занято: " .. dbustext)
   end )
 
--- help
-require ("help/help")
-local help_nofify = nil
-function notifyHide(mynotification)    --функция удаляет уведомление по переданному идентификатору
-  if mynotification ~= nil then
-    naughty.destroy(mynotification)
-    return nil
-  else
-    return true
-  end
-end
-
--- translate
+-- Translation text
 function clip_translate()
   local clip = nil
   clip = awful.util.pread("xclip -o")
@@ -434,31 +434,41 @@ for s = 1, screen.count() do
   bottom_panel_box[s] = awful.wibox({ position = "bottom", height = 16, screen = s })
 
   --quake
-  quakeconsole[s] = quake({ terminal = config.terminal, height = 0.3, screen = s })
+  quakeconsole[s] = quake({ terminal = config.terminal, height = 0.8, screen = s })
 
   -- Widgets that are aligned to the left
   local left_layout = wibox.layout.fixed.horizontal()
   left_layout:add(start_button)
   left_layout:add(mytaglist[s])
-  left_layout:add(mypromptbox[s])
 
   -- Widgets that are aligned to the right
   local right_layout = wibox.layout.fixed.horizontal()
   if s == 1 then right_layout:add(wibox.widget.systray()) end
   right_layout:add(fs_root)
-  right_layout:add(batterywidget)
+  right_layout:add(split_line)
+  right_layout:add(battery_widget)
+  right_layout:add(split_line)
   right_layout:add(keyboard)
-  right_layout:add(APW)
+  right_layout:add(split_line)
+  --right_layout:add(APW)
   right_layout:add(mytextclock)
   right_layout:add(mylayoutbox[s])
 
   -- Now bring it all together (with the tasklist in the middle)
   local layout = wibox.layout.align.horizontal()
   layout:set_left(left_layout)
-  layout:set_middle(mytasklist[s])
   layout:set_right(right_layout)
 
+  local botom_left_layer = wibox.layout.fixed.horizontal()
+  botom_left_layer:add(mypromptbox[s])
+  botom_left_layer:add(mytasklist[s])
+  botom_left_layer:add(wibox.widget.systray())
+
+  local botom_layout = wibox.layout.align.horizontal()
+  botom_layout:set_left(botom_left_layer)
+
   mywibox[s]:set_widget(layout)
+  bottom_panel_box[s]:set_widget(botom_layout)
   --top_panel_box[s]:set_widget(layout)
 end
 --<<
@@ -529,9 +539,22 @@ globalkeys = awful.util.table.join(
     end),
 
   --Audio control
-  awful.key({ }, "XF86AudioRaiseVolume",  APW.Up),
-  awful.key({ }, "XF86AudioLowerVolume",  APW.Down),
-  awful.key({ }, "XF86AudioMute",         APW.ToggleMute),
+  --awful.key({ }, "XF86AudioRaiseVolume",  APW.Up),
+  --awful.key({ }, "XF86AudioLowerVolume",  APW.Down),
+  --awful.key({ }, "XF86AudioMute",         APW.ToggleMute),
+
+  awful.key({ }, "XF86AudioRaiseVolume", 
+    function ()
+      awful.util.spawn("amixer set Master 5%+") 
+    end),
+  awful.key({ }, "XF86AudioLowerVolume", 
+    function ()
+      awful.util.spawn("amixer set Master 5%-") 
+    end),
+  awful.key({ }, "XF86AudioMute", 
+    function ()
+      awful.util.spawn("amixer sset Master toggle") 
+    end),
 
   -- Prompt
   --awful.key({ modkey },            "r",     function () mypromptbox[mouse.screen]:run() end),
@@ -612,7 +635,7 @@ clientkeys = awful.util.table.join(
   awful.key({ modkey, "Control" }, "Return", function (c) c:swap(awful.client.getmaster()) end),
   awful.key({ modkey,           }, "o",      awful.client.movetoscreen                        ),
   awful.key({ modkey,           }, "t",      function (c) c.ontop = not c.ontop            end),
-  awful.key({ modkey, "Control" }, "v", lain.util.magnify_client),
+  --awful.key({ modkey, "Control" }, "v", lain.util.magnify_client),
   awful.key({ modkey, "Shift" }, "t",
     function (c)
       if   c.titlebar then awful.titlebar.remove(c)
@@ -734,7 +757,7 @@ awful.rules.rules = {
     properties = {
       tag = tags[1][2] } },
 
-  { rule = { class = "Google-chrome-stable" },
+  { rule = { class = "google-chrome" },
     properties = {
       tag = tags[1][1] } },
 
@@ -829,3 +852,15 @@ end)
 client.connect_signal("focus", function(c) c.border_color = beautiful.border_focus end)
 client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_normal end)
 -- }}}
+
+function run_once(cmd)
+  findme = cmd
+  firstspace = cmd:find(" ")
+  if firstspace then
+    findme = cmd:sub(0, firstspace-1)
+  end
+  awful.util.spawn_with_shell("pgrep -u $USER -x " .. findme .. " > /dev/null || (" .. cmd .. ")")
+end
+
+run_once("kbdd")
+run_once("xscreensaver -no-splash")
