@@ -19,6 +19,23 @@ local cal = require("utils.cal")
 -- Тестирование Lain
 --local lain = require("lain")
 
+naughty.config.defaults.timeout          = 5
+naughty.config.defaults.screen           = 1
+naughty.config.defaults.position         = "top_right"
+naughty.config.defaults.margin           = 4
+naughty.config.defaults.height           = 60
+naughty.config.defaults.width            = 300
+naughty.config.defaults.gap              = 1
+naughty.config.defaults.ontop            = true
+naughty.config.defaults.font             = beautiful.font or "Verdana 8"
+naughty.config.defaults.icon             = nil
+naughty.config.defaults.icon_size        = 16
+naughty.config.defaults.fg               = beautiful.fg_focus or '#ffffff'
+naughty.config.defaults.bg               = beautiful.bg_focus or '#535d6c'
+naughty.config.presets.border_color     = beautiful.border_focus or '#000000'
+naughty.config.defaults.border_width     = 1
+naughty.config.defaults.hover_timeout    = nil
+
 -->>Обработка ошибок
 if awesome.startup_errors then
   naughty.notify({
@@ -267,18 +284,13 @@ function battery_status ()
     local discharging
     local power
     if string.match(line, "Discharging")=="Discharging" then --discharging: always red
-      discharging="<span color=\"#CC7777\"> ↓ </span>"
+      discharging="<span color=\"#FF0000\"> ↓ </span>"
     else --charging
-      discharging="<span color=\"#CCCC77\"> ↑ </span>"
+      discharging="<span color=\"#12CC2C\"> ↑ </span>"
     end
-    if tonumber(battery_load)<100 then --almost charged
-      power="<span color=\"#77CC77\">"
-    elseif tonumber(battery_load)<60 then
-      power="<span color=\"#77CC77\">"
-    elseif tonumber(battery_load)<30 then
-      power="<span color=\"#77CC77\">"
-    elseif tonumber(battery_load)<5 then
-      power="<span color=\"#77CC77\">"
+    
+    if tonumber(battery_load)<9 then
+      power="<span color=\"#EB373F\">"
       naughty.notify({title = "⚡ Beware! ⚡",
         text = "Battery charge is low ( ⚡ "..battery_load.." )!",
         timeout = 10,
@@ -286,8 +298,14 @@ function battery_status ()
         fg = beautiful.fg_focus,
         bg = beautiful.bg_focus
       })
+    elseif tonumber(battery_load)<30 then   
+      power="<span color=\"#E8AA30\">"
+    elseif tonumber(battery_load)<60 then
+      power="<span color=\"#DFE20A\">"
+    elseif tonumber(battery_load)<=100 then
+      power="<span color=\"#18E818\">"
     end
-
+    
     if battery_num and battery_load and time_rem then
       table.insert(output,discharging.."⚡ "..power..battery_load.."% "..time_rem.."</span>")
     elseif battery_num and battery_load then --remaining time unavailable
@@ -444,6 +462,7 @@ for s = 1, screen.count() do
   -- Widgets that are aligned to the right
   local right_layout = wibox.layout.fixed.horizontal()
   if s == 1 then right_layout:add(wibox.widget.systray()) end
+  right_layout:add(split_line)
   right_layout:add(fs_root)
   right_layout:add(split_line)
   right_layout:add(battery_widget)
@@ -676,7 +695,23 @@ clientkeys = awful.util.table.join(
       else
         help_notify = nil
       end
-    end)
+    end),
+
+  awful.key({ modkey}, "d", function ()
+    info = true
+    awful.prompt.run({ fg_cursor = "black",bg_cursor="orange", prompt = "<span color='#008DFA'>Dict:</span> " }, 
+    mypromptbox[mouse.screen],
+    function(word)
+      local f = io.popen("dict -d wn " .. word .. " 2>&1")
+      local fr = ""
+      for line in f:lines() do
+        fr = fr .. line .. '\n'
+      end
+      f:close()
+      naughty.notify({ text = '<span font_desc="Sans 7">'..fr..'</span>', timeout = 0, width = 400 })
+    end,
+    nil, awful.util.getdir("cache") .. "/dict") 
+  end)
 )
 
 -->>Привязка хоткеев к окружению
@@ -853,14 +888,36 @@ client.connect_signal("focus", function(c) c.border_color = beautiful.border_foc
 client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_normal end)
 -- }}}
 
-function run_once(cmd)
-  findme = cmd
-  firstspace = cmd:find(" ")
-  if firstspace then
-    findme = cmd:sub(0, firstspace-1)
+--function run_once(cmd)
+--  findme = cmd
+--  firstspace = cmd:find(" ")
+--  if firstspace then
+--    findme = cmd:sub(0, firstspace-1)
+--  end
+--  awful.util.spawn_with_shell("pgrep -u $USER -x " .. findme .. " > /dev/null || (" .. cmd .. ")")
+--end
+
+function run_once(prg,arg_string,pname,screen)
+  if not prg then
+    do return nil end
   end
-  awful.util.spawn_with_shell("pgrep -u $USER -x " .. findme .. " > /dev/null || (" .. cmd .. ")")
+  if not pname then
+    pname = prg
+  end
+  if not arg_string then 
+    awful.util.spawn_with_shell("pgrep -f -u $USER -x '" .. pname .. "' || (" .. prg .. ")",screen)
+  else
+    awful.util.spawn_with_shell("pgrep -f -u $USER -x '" .. pname .. " ".. arg_string .."' || (" .. prg .. " " .. arg_string .. ")",screen)
+  end
 end
 
 run_once("kbdd")
-run_once("xscreensaver -no-splash")
+run_once("urxvtd", "--quiet --fork --opendisplay")
+run_once("dbus-launch nm-applet &", nil, "nm-applet")
+run_once("xscreensaver","-no-splash")
+run_once("pidgin",nil,nil,2)
+run_once("wicd-client",nil,"/usr/bin/python2 -O /usr/share/wicd/gtk/wicd-client.py")
+run_once("setxkbmap -layout 'us,ru(winkeys)' -option grp:caps_toggle")
+run_once("xset r rate 200 30")
+run_once("xrdb -load ~/.Xresources")
+run_once("ogg123 -q '/home/rb/.config/awesome/sounds/desktop-login.ogg'")
