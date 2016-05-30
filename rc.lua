@@ -800,6 +800,10 @@ awful.rules.rules = {
     properties = {
       tag = tags[1][4] } },
 
+  { rule = { class = "telegram-desktop"},
+    properties = {
+      tag = tags[1][4] } },
+
   { rule = { class = "Claws-mail"},
     properties = {
       tag = tags[1][5] } },
@@ -921,3 +925,6 @@ run_once("setxkbmap -layout 'us,ru(winkeys)' -option grp:caps_toggle")
 run_once("xset r rate 200 30")
 run_once("xrdb -load ~/.Xresources")
 run_once("ogg123 -q '/home/rb/.config/awesome/sounds/desktop-login.ogg'")
+run_once("telegram-desktop")
+run_once("skype")
+run_once("google-chrome-stable")
